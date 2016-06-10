@@ -4,7 +4,7 @@ var db;
 
 window.onload = function() {
 	//db = new PouchDB('videoLibrary');
-    db = new PouchDB('http://admin:admin@127.0.0.1:5984/videolibrary_couch');
+    db = new PouchDB('http://admin:admin@127.0.0.1:5984/videolibrary_couch1');
     
     /*var remoteDB = 'http://admin:admin@127.0.0.1:5984/videolibrary_couch';
     db.sync(remoteDB, {
@@ -22,18 +22,24 @@ window.onload = function() {
     
 };
 
+function registerStudent(){
+	var student_name = $("#student_name").val();
+	var student_info = {
+		_id: student_name,
+		type: 'student',
+	};
+	db.put(student_info);
+	alert("Student registered...")
+}
+
 function uploadVideo(){
     var student_name = $("#student_name").val();
     console.log("uploadVideo for : " + student_name);
     
     db.get(student_name).catch(function (err) {
         if (err.status === 404) { // not found!
-            var student_info = {
-                _id: student_name,
-                type: 'student'
-            };
-            db.put(student_info);
-            return db.get(student_name);
+			alert("No such student record found");
+			return;
         } else { // hm, some other error
             throw err;
         }
@@ -45,8 +51,13 @@ function uploadVideo(){
         var file = document.getElementById('inputFile').files[0];
         if (file) {
             console.log(file);
+			
             db.putAttachment(student_name, file.name, studentDoc._rev, file, file.type).then(function(){
-                alert("Uploaded successfully...");
+                console.log("Uploaded successfully...");
+				/*db.get(student_name).then(function (doc) {
+					doc.attachment_fileNames.push(file.name);
+					db.put(doc);
+				});*/
             }).catch(function(err){
                 console.log(err);
             });
@@ -72,8 +83,35 @@ function fetchExistingVideos(){
         } else { // hm, some other error
             throw err;
         }
-    }).then(function (studentDoc) {        
-        db.bulkGet({
+    }).then(function (studentDoc) {
+		console.log(studentDoc);
+		if(studentDoc){	
+			if(studentDoc._attachments){
+				$("#videoLibraryId").html("<i>Existing Assignment Videos</i><br>");
+				for(var key in studentDoc._attachments){
+					console.log(key);
+					var url = "http://127.0.0.1:5984/videolibrary_couch1/" + studentDoc._id + "/" + key;
+					console.log(url);
+					
+					var video = document.createElement('video');
+					video.width = 200;
+					video.height = 200;
+					video.setAttribute("controls","controls");
+					
+					var source = document.createElement('source');
+					source.src = url;
+					source.type = studentDoc._attachments[key].content_type;
+					video.appendChild(source);
+					$("#videoLibraryId").append(video);
+				}
+			}else{
+				$("#videoLibraryId").html("<i>No video attachments available</i>");
+				console.log("No video attachments available");
+			}
+		}else{
+			$("#videoLibraryId").html("<i>No such student record found</i>");
+		}
+        /*db.bulkGet({
                 docs: [ { id: studentDoc._id, rev: studentDoc._rev} ],
                 attachments: true,
                 binary: true
@@ -116,7 +154,7 @@ function fetchExistingVideos(){
             }
         }).catch(function (err) {
             console.log(err);
-        });
+        });*/
     });
     
 
