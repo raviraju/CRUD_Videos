@@ -9,5 +9,7 @@ CRUD operations for video attachments in pouchDb-couchDb NoSQL databases
 
 2)Start CouchDb Service
   http://127.0.0.1:5984/_utils/
+  
+NOTE : while uploading videos, have broswer console open to monitor completion of video upload
 
 
